@@ -77,16 +77,40 @@ Running Aurora simulations
 
 Finally, let's impose some transport coefficients and run a simulation.
 
-Aurora uses a diffusive-convective model for particle fluxes, so we need to specify diffusion (D) and convection (v) coefficients. Let's impose, for example, constant profiles over the entire radial grid::
+Aurora uses a diffusive-convective model for particle fluxes, so we need to specify diffusion (D) and convection (v) coefficients. The function :py:func:`~aurora.transport_utils.interp_coeffs` function allows to easily impose radial profiles for D and v on the radial grid, after specifying their values at some arbitrary values of :math:`\rho_{pol}`, and then interpolating::
 
-  D_z = 1e4 * np.ones(len(asim.rvol_grid))
-  V_z = -2e2 * np.ones(len(asim.rvol_grid))
+  rhop = [0.00, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.85,
+          0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96,
+          0.97, 0.98, 0.99, 1.00, 1.01, 1.02, 1.03,
+          1.04, 1.05, 1.06, 1.07, 1.08, 1.09, 1.10]
+          
+  D = [2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4,
+       1.20e4, 1.00e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4,
+       0.50e4, 0.50e4, 0.50e4, 0.50e4, 0.75e4, 1.00e4, 1.50e4, 
+       2.00e4, 2.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4]  # cm^2/s  
+
+  v = [-0.5e2, -0.5e2, -1e2, -3e2, -4e2, -3.5e2, -3.0e2, -1.0e2, -1.5e2, -2.5e2,
+       -5e2, -5e2, -5e2, -5e2, -6e2, -6e2, -6e2,
+       -8e2, -12e2, -15e2, -20e2, -15e2, -12e2, -10e2,
+       -8e2, -6e2, -4e2, -2e2, -2e2, -2e2, -2e2]   # cm/s
+
+  D_z = aurora.transport_utils.interp_coeffs(namelist, asim.rhop_grid, D, radial_dependency = True, rhop = rhop, method = 'Pchip_spline', plot = True, name = 'D')
+  v_z = aurora.transport_utils.interp_coeffs(namelist, asim.rhop_grid, v, radial_dependency = True, rhop = rhop, method = 'Pchip_spline', plot = True, name = 'v')
+  
+Having selected `plot = True` in the interpolating functions, the employed transport profiles will be automatically shown:
+
+.. figure:: figs/tutorial_transport_profiles.png
+    :align: center
+    :alt: Constant transport profiles imposed in the simulation
+    :figclass: align-center 
+
+    Constant transport profiles imposed in the simulation
 
 In general (and very often in practice), D and v could be defined with more dimensions to include a time-dependence and also different values for different charge states.
 
 At this point, we are ready to run an Aurora simulation, with::
 
-  out = asim.run_aurora(D_z, V_z, plot=True)
+  out = asim.run_aurora(D_z, v_z, plot=True)
 
 Blazing fast! Depending on how many time and radial points you have requested (a few hundreds by default), how many charge states you are simulating, etc., a simulation could take as little as <50 ms, which is significantly faster than other codes, as far as we know. If you add `use_julia=True` to the :py:meth:`aurora.core.run_aurora` call the run will be even faster; wear your seatbelt!
 
@@ -395,12 +419,27 @@ Neutral transport and pumping must be finally specified through the following pa
 
 We can now go ahead and set up our Aurora simulation, using the input parameters contained in `namelist` and the magnetic equilibrium contained in `geqdsk`: ::
 
-  asim = aurora.aurora_sim(namelist, geqdsk=geqdsk)
+    asim = aurora.aurora_sim(namelist, geqdsk=geqdsk)
 
-Again, let's impose some constant transport coefficients::
+Again, let's set some transport profiles::
 
-  D_z = 1e4 * np.ones(len(asim.rvol_grid))
-  V_z = -2e2 * np.ones(len(asim.rvol_grid))
+  rhop = [0.00, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.85,
+          0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96,
+          0.97, 0.98, 0.99, 1.00, 1.01, 1.02, 1.03,
+          1.04, 1.05, 1.06, 1.07, 1.08, 1.09, 1.10]
+          
+  D = [2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4,
+       1.20e4, 1.00e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4,
+       0.50e4, 0.50e4, 0.50e4, 0.50e4, 0.75e4, 1.00e4, 1.50e4, 
+       2.00e4, 2.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4]  # cm^2/s  
+
+  v = [-0.5e2, -0.5e2, -1e2, -3e2, -4e2, -3.5e2, -3.0e2, -1.0e2, -1.5e2, -2.5e2,
+       -5e2, -5e2, -5e2, -5e2, -6e2, -6e2, -6e2,
+       -8e2, -12e2, -15e2, -20e2, -15e2, -12e2, -10e2,
+       -8e2, -6e2, -4e2, -2e2, -2e2, -2e2, -2e2]   # cm/s
+
+  D_z = aurora.transport_utils.interp_coeffs(namelist, asim.rhop_grid, D, radial_dependency = True, rhop = rhop, method = 'Pchip_spline', plot = False, name = 'D')
+  v_z = aurora.transport_utils.interp_coeffs(namelist, asim.rhop_grid, v, radial_dependency = True, rhop = rhop, method = 'Pchip_spline', plot = False, name = 'v')
 
 and finally let's run the simulation::
 
@@ -428,6 +467,151 @@ Note that, having defined actual volumes for the neutrals reservoirs, the partic
 Finally, all the time traces concerning the multi-reservoir model might be also extracted, as before, in a dictionary `reservoirs` through::
 
   reservoirs = asim.reservoirs_time_traces(plot = False)
+
+
+Including ELM transport in the simulation
+-----------------------------------------
+
+Let's try now to use the model which automatically adapt the transport coefficients to a simple phenomenological model to simulate ELM transport.
+
+We start by setting the some input parameters as in the previous tutorial::
+
+  import aurora
+  
+  import numpy as np
+  import matplotlib.pyplot as plt
+  
+  namelist = aurora.load_default_namelist()
+  
+  from omfit_classes import omfit_eqdsk, omfit_gapy
+
+  geqdsk = omfit_eqdsk.OMFITgeqdsk('example.gfile')
+  
+  inputgacode = omfit_gapy.OMFITgacode('example.input.gacode')
+
+  kp = namelist['kin_profs']
+  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
+  kp['ne']['vals'] = inputgacode['ne']*1e13    # 1e19 m^-3 --> cm^-3
+  kp['Te']['vals'] = inputgacode['Te']*1e3     # keV --> eV
+  
+  imp = namelist['imp'] = 'He'
+  namelist["main_element"] = "D"
+
+  namelist["timing"]["times"] = [0,1.0]
+
+  namelist["source_type"] = "const"
+  namelist["source_rate"] = 2e20  # particles/s
+  
+  namelist["recycling_flag"] = True
+  namelist["wall_recycling"] = 0.5
+  
+The activation of the ELM model is recognized by Aurora setting::
+
+  namelist['ELM_model']['ELM_flag'] = True
+
+Let's impose now the ELM parameters, namely ELM frequency and the duration of the various phases of the ELM-driven transport modulation::
+
+  namelist['ELM_model']['ELM_frequency'] = 100 # Hz
+  namelist['ELM_model']['crash_duration'] = 0.5 # ms
+  namelist['ELM_model']['plateau_duration'] = 0.0 # ms
+  namelist['ELM_model']['recovery_duration'] = 0.1 # ms
+
+Let's also adapt the time grid, in order to save computation time::
+
+  namelist['ELM_model']['adapt_time_grid'] = True
+  namelist['ELM_model']['dt_intra_ELM'] = 5e-5 # s
+  namelist['ELM_model']['dt_increase_inter_ELM'] = 1.05 
+
+We can now go ahead and set up our Aurora simulation, using the input parameters contained in `namelist` and the magnetic equilibrium contained in `geqdsk`: ::
+
+    asim = aurora.aurora_sim(namelist, geqdsk=geqdsk)
+    
+It is now time to impose the transport. Both for D and for v, we will need to specify two profile: one "inter-ELM", and one "intra-ELM". The time modulation between the two will be done linearly according to the parameters `crash_duration`, `plateau_duration` and `recovery_duration`, with a frequency specified by `ELM_frequency`: ::
+
+  rhop = [0.00, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.85,
+          0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96,
+          0.97, 0.98, 0.99, 1.00, 1.01, 1.02, 1.03,
+          1.04, 1.05, 1.06, 1.07, 1.08, 1.09, 1.10]
+      
+  D = [2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4,
+       1.20e4, 1.00e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4,
+       0.50e4, 0.50e4, 0.50e4, 0.50e4, 0.75e4, 1.00e4, 1.50e4, 
+       2.00e4, 2.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4] # inter-ELM profile, cm^2/s  
+
+  D_ELM = [2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 
+           2.00e4, 1.50e4, 1.00e4, 1.50e4, 2.00e4, 3.00e4, 4.00e4,
+           8.00e4, 16.00e4, 16.00e4, 12.00e4, 8.00e4, 6.00e4, 4.00e4, 
+           4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4] # intra-ELM profile, cm^2/s  
+      
+  v = [-0.5e2, -0.5e2, -1e2, -3e2, -4e2, -3.5e2, -3.0e2, -1.0e2, -1.5e2, -2.5e2,
+       -5e2, -5e2, -5e2, -5e2, -6e2, -6e2, -6e2,
+       -8e2, -12e2, -15e2, -20e2, -15e2, -12e2, -10e2,
+       -8e2, -6e2, -4e2, -2e2, -2e2, -2e2, -2e2] # inter-ELM profile, cm/s  
+
+  v_ELM = [-0.5e2, -0.5e2, -1e2, -3e2, -4e2, -3.5e2, -3.0e2, -1.0e2, -1.5e2, -2.5e2,
+       -5e2, -5e2, -5e2, -5e2, -6e2, -6e2, -6e2,
+       -8e2, -12e2, -15e2, -20e2, -15e2, -12e2, -10e2,
+       -8e2, -6e2, -4e2, -2e2, -2e2, -2e2, -2e2] # intra-ELM profile, cm/s  
+
+  times_transport, D_z = aurora.transport_utils.ELM_model(namelist['timing'], namelist['ELM_model'], asim.rhop_grid, rhop, D, D_ELM, method = 'Pchip_spline', plot = False, name = 'D')
+  times_transport, v_z = aurora.transport_utils.ELM_model(namelist['timing'], namelist['ELM_model'], asim.rhop_grid, rhop, v, v_ELM, method = 'Pchip_spline', plot = False, name = 'v')
+  
+The function :py:func:`~aurora.transport_utils.ELM_model` will automatically create the time array times_transport and the transport arrays D_z, v_z, which we will need to use.
+
+Let's finally run the simulation, explicitly referring to the time array corresponding to the input transport values::
+
+  out = asim.run_aurora(D_z, v_z, times_transport, plot=True, plot_average = True, interval = 0.01)
+
+Again, having selected `plot = True`, some plots of the results will be automatically shown. Additionally, having selected `plot_average = True`, the same plots will be shown also in their "ELM-averaged" version, i.e. showing the values of the various density/fluxes... averaged over the ELM cycles. For this, we will need to specify the argument `interval` with the time interval over which perform the average, i.e. the ELM period, which is in this case 1/100 = 0.01 s.
+
+Here we have the main time traces:
+
+.. figure:: figs/tutorial_time_traces_ELM.png
+    :align: center
+    :alt: Time traces from the multi-reservoir particle balance model including ELMs
+    :figclass: align-center 
+
+    Time traces from the multi-reservoir particle balance model including ELMs
+
+In order to make this more clear, we can plot the same, but averaged over cycles...
+
+.. figure:: figs/tutorial_time_traces_ELM_average.png
+    :align: center
+    :alt: ELM-averaged time traces from the multi-reservoir particle balance model including ELMs
+    :figclass: align-center 
+
+    ELM-averaged time traces from the multi-reservoir particle balance model including ELMs
+
+or we might zoom in and see what ELMs do:
+
+.. figure:: figs/tutorial_time_traces_ELM_zoom.png
+    :align: center
+    :alt: Zoomed-in time traces from the multi-reservoir particle balance model including ELMs
+    :figclass: align-center 
+
+    Zoomed-in time traces from the multi-reservoir particle balance model including ELMs
+    
+Same story for the impurity density profiles: we might observe the individual profile during the ELM cycles, showing the expected degradation of the pedestal in the times of maximum transport...
+
+.. figure:: figs/tutorial_plasma_profiles_ELM.png
+    :align: center
+    :alt: Simulated charge state density profiles including ELMs (left: inter-ELM, right: intra-ELM)
+    :figclass: align-center
+
+    Simulated charge state density profiles including ELMs (left: inter-ELM, right: intra-ELM)
+    
+or we might look at the ELM-averaged profile:
+
+.. figure:: figs/tutorial_plasma_profiles_ELM_average.png
+    :align: center
+    :alt: Simulated ELM-averaged charge state density profiles including ELM
+    :figclass: align-center
+
+    Simulated ELM-averaged charge state density profiles including ELM
+
+Finally, if the ELM model is used, the same time traces contained in reservoirs can be extracted in a dictionary `reservoirs_average`, in their averaged version over ELM cycles, again specifying the interval over which the average is performed, as:::
+
+  reservoirs_average = asim.reservoirs_average_time_traces(interval = 0.01, plot = False) 
 
 
 Using the full plasma-wall interaction model
@@ -526,10 +710,25 @@ In order to properly activate the full PWI model, we do not call the main class 
 
   asim = aurora.pwi.aurora_sim_pwi(namelist, geqdsk=geqdsk)
 
-Again, let's impose some constant transport coefficients::
+Again, let's set some transport profiles::
 
-  D_z = 1e4 * np.ones(len(asim.rvol_grid))
-  V_z = -2e2 * np.ones(len(asim.rvol_grid))
+  rhop = [0.00, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.85,
+          0.90, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96,
+          0.97, 0.98, 0.99, 1.00, 1.01, 1.02, 1.03,
+          1.04, 1.05, 1.06, 1.07, 1.08, 1.09, 1.10]
+          
+  D = [2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4, 2.00e4,
+       1.20e4, 1.00e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4, 0.75e4,
+       0.50e4, 0.50e4, 0.50e4, 0.50e4, 0.75e4, 1.00e4, 1.50e4, 
+       2.00e4, 2.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4, 4.00e4]  # cm^2/s  
+
+  v = [-0.5e2, -0.5e2, -1e2, -3e2, -4e2, -3.5e2, -3.0e2, -1.0e2, -1.5e2, -2.5e2,
+       -5e2, -5e2, -5e2, -5e2, -6e2, -6e2, -6e2,
+       -8e2, -12e2, -15e2, -20e2, -15e2, -12e2, -10e2,
+       -8e2, -6e2, -4e2, -2e2, -2e2, -2e2, -2e2]   # cm/s
+
+  D_z = aurora.transport_utils.interp_coeffs(namelist, asim.rhop_grid, D, radial_dependency = True, rhop = rhop, method = 'Pchip_spline', plot = False, name = 'D')
+  v_z = aurora.transport_utils.interp_coeffs(namelist, asim.rhop_grid, v, radial_dependency = True, rhop = rhop, method = 'Pchip_spline', plot = False, name = 'v')
 
 and finally let's run the simulation::
 
@@ -570,12 +769,13 @@ Having also called the argument `plot_PWI=True`, a couple of new windows will sh
 * Finally, in the third row we have the various interaction rates, namely: rate of reflected impurity particles, rate of promptly recycled impurity particles, rate of implanted impurity particles (i.e. absorbed by the wall), and rate of sputtered impurity particles by different projectiles (i.e. released by the wall). Rightmost, we have a global absorption/release balance for impurity particles from the wall as reservoir.
 
 We note that, in this case, balance in the simulation (i.e. in turn a constant impurity content in the plasma) is determined by when fluxes into/out from the walls are balanced, i.e. absorption and release rate become equal.
-  
+
 Finally, similarly as it is done for `reservoirs`, the time traces concerning the plasma-wall interaction might be also extracted in a dictionary `PWI_traces` as::
 
   PWI_traces = asim.PWI_time_traces(plot = False)
 
 The names of the various fields in `PWI_traces` should be self-explanatory.
+
 
 
 Neoclassical transport with FACIT
@@ -630,16 +830,16 @@ A full example on how to run FACIT in Aurora is given `examples/facit_basic.py`.
                  gradNz = np.gradient(Nz, roa*amin)
 
                  fct = aurora.FACIT(roa,
-		                    zi, asim.A_imp,
-				    asim.main_ion_Z, asim.main_ion_A,
-				    Ti, Ni, Nz, Machi, Zeff,
-				    gradTi, gradNi, gradNz,
-				    amin/R0, B0, R0, qmag,
-				    rotation_model = rotation_model, Te_Ti = TeovTi,
-				    RV = RV, ZV = ZV)
+                        zi, asim.A_imp,
+            asim.main_ion_Z, asim.main_ion_A,
+            Ti, Ni, Nz, Machi, Zeff,
+            gradTi, gradNi, gradNz,
+            amin/R0, B0, R0, qmag,
+            rotation_model = rotation_model, Te_Ti = TeovTi,
+            RV = RV, ZV = ZV)
             
-		 D_z[:idxsep+1,j,i] = fct.Dz*100**2 # convert to cm**2/s
-		 V_z[:idxsep+1,j,i] = fct.Vconv*100 # convert to cm/s
+     D_z[:idxsep+1,j,i] = fct.Dz*100**2 # convert to cm**2/s
+     V_z[:idxsep+1,j,i] = fct.Vconv*100 # convert to cm/s
 
    
 .. warning::

@@ -386,10 +386,10 @@ def get_atom_data(imp, files=["acd", "scd"]):
     for filename in files:
         if isinstance(files, dict) and files[filename] is not None:
             all_files[filename] = files[filename] 
-            
+
         elif atom_dict is None:
             raise KeyError(f"Atomics data not found for impurity {imp}!")
-            
+
         elif filename not in atom_dict:
             raise ValueError(f"Could not fetch {imp} {filecheck.upper()} file! Please specify file locations using 'files' argument, for example files=dict(acd='user/acd89_ar.dat')")
         else:
@@ -403,9 +403,6 @@ def get_atom_data(imp, files=["acd", "scd"]):
 
         # load specific file and add it to output dictionary
         atom_data[filetype] = load_adas_file_with_cache(fileloc)
-
-
-    return atom_data
 
     return atom_data
 

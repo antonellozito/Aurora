@@ -57,8 +57,11 @@ For compilation after git-cloning, users can make use
 
     pip3 install . 
 
-   
-Note that the makefile will not install any of the dependencies, listed in the `requirements.txt` file in the main directory. You can use this file to quickly install dependencies within a Python virtual environment, or install each dependency one at a time.
+Alternatively, the compilation can be executed manually using
+
+    mkdir builds; cd builds; cmake ..; make; cp *.so ../aurora
+
+Note that the compilation process will not install any of the dependencies, listed in the `requirements.txt` file in the main directory. You can use this file to quickly install dependencies within a Python virtual environment, or install each dependency one at a time.
 
 The Julia version of the code is not built by default. If you have Julia installed on your system, you can do  
 
