@@ -7,6 +7,13 @@ find_package(
   COMPONENTS Interpreter Development.Module NumPy
   REQUIRED)
 
+# Find Python executable
+execute_process(
+    COMMAND which python
+    OUTPUT_VARIABLE PYTHON_EXECUTABLE_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE_PATH})
 
 # F2PY headers
 execute_process(
