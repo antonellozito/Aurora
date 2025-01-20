@@ -15,6 +15,8 @@ __pycache__
 !examples/
 !input/
 !plotting/
+!data/
+!runs/
 
 # Aurora animations
 *.mp4
@@ -63,7 +65,9 @@ junit
 # folder-related macbook files
 *.DS_Store
 docs/.idea/*
-aurora/config.py
 
 # Compilation outputs
 builds/*
+
+# Cache folder
+.cache/*
