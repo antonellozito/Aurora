@@ -18,6 +18,10 @@ __pycache__
 !data/
 !runs/
 
+# Ignore local data and scripts
+data/*
+runs/*
+
 # Aurora animations
 *.mp4
 
