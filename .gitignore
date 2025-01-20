@@ -13,12 +13,17 @@ __pycache__
 !aurora.jl/
 !docs/
 !examples/
+!input/
+!plotting/
 
 # Aurora animations
 *.mp4
 
 # Sphinx documentation
 docs/_build/
+
+# Plots
+plotting/plots/
 
 # PyPI dist
 dist/*
