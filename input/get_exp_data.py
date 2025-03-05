@@ -113,11 +113,12 @@ def nimp_gas(device,shot,imp,shotfile_lines,shotfile_currents,
 # WRITE OUTPUT TO DICTIONARY
 
 def exp_data(device,
-             shot,
+             shot_equ,
              shotfile_equ,
              time_equ,
              exp_equ,
              main_species_concentration,
+             shot_kin,
              time_window_ne,
              time_window_data_ne,
              shotfile_ne,
@@ -130,6 +131,7 @@ def exp_data(device,
              shotfile_core_Ti,
              shotfile_edge_Ti,
              exp_Ti,
+             shot_n0,
              shot_imp_main,
              imp_main,
              shotfile_imp_main,
@@ -138,6 +140,7 @@ def exp_data(device,
              shotfiles_imp_background,
              time_windows_background,
              exp_imp,
+             shot_gas,
              shotfile_lines,
              shotfile_currents,
              shotfile_total_pressures,
@@ -153,21 +156,21 @@ def exp_data(device,
              time_points_elm,
              exp_elm):
     
-    equilibrium_file = equilibrium(device,shot,shotfile_equ,time_equ,exp_equ)
+    equilibrium_file = equilibrium(device,shot_equ,shotfile_equ,time_equ,exp_equ)
         
-    ne_dict = ne(device,shot,time_window_ne,time_window_data_ne,interval_elm,time_points_elm,shotfile_ne,exp_ne,shotfile_elm,exp_elm)
+    ne_dict = ne(device,shot_kin,time_window_ne,time_window_data_ne,interval_elm,time_points_elm,shotfile_ne,exp_ne,shotfile_elm,exp_elm)
     
-    Te_dict = Te(device,shot,time_window_Te,time_window_data_Te,shotfile_Te,exp_Te)
+    Te_dict = Te(device,shot_kin,time_window_Te,time_window_data_Te,shotfile_Te,exp_Te)
     
-    Ti_dict = Ti(device,shot,time_window_data_Ti,shotfile_core_Ti,shotfile_edge_Ti,exp_Ti)
+    Ti_dict = Ti(device,shot_kin,time_window_data_Ti,shotfile_core_Ti,shotfile_edge_Ti,exp_Ti)
     
-    n0_dict = n0(device,shot)
+    n0_dict = n0(device,shot_n0)
     
     nimp_core_dict = nimp_core(device,shot_imp_main,imp_main,shotfile_imp_main,
                   shots_imp_background,imp_background,shotfiles_imp_background,
                   time_windows_background,exp_imp)
     
-    nimp_gas_dict = nimp_gas(device,shot,imp_main,shotfile_lines,shotfile_currents,
+    nimp_gas_dict = nimp_gas(device,shot_gas,imp_main,shotfile_lines,shotfile_currents,
                  shotfile_total_pressures,gauge_div,gauge_pump,impurity_pressure_drop,main_species_pressure_drop,
                  time_window_pre_puff,time_window_correction,exp_imp_gas)
     

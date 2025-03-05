@@ -11,8 +11,6 @@ from omfit_classes import omfit_eqdsk, omfit_gapy
 def equilibrium(shot,shotfile='EQI',time=0.,exp='augd'):
     
     equilibrium = omfit_eqdsk.OMFITgeqdsk(filename="dummy_filename")
-    if shot == 39148 or shot == 39149 or shot == 39150:
-        shot = 39148
     equilibrium.from_aug_sfutils(shot=shot, time=time, eq_shotfile=shotfile)
     os.remove(equilibrium.filename)
     
