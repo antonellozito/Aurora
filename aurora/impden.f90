@@ -998,8 +998,17 @@ subroutine full_PWI_model(det, Raxis, tsuold, dsulold, dsuold, rcls, species, &
   sigmamainret = (Nmainret / surfmain) * 1.0E4   ! OLD surface implantation density at the main wall in m^-2
   sigmadivret = (Ndivret / surfdiv) * 1.0E4   ! OLD surface implantation density at the divertor wall in m^-2
  
-  mainsatlevel = sigmamainret / nmainsat   ! OLD saturation level of the main wall
-  divsatlevel = sigmadivret / ndivsat   ! OLD saturation level of the main wall
+  if (nmainsat == 0.0) then
+     mainsatlevel = 1.0   ! Wall always saturated --> No wall implantation --> Only reflection and prompy recycling
+  else
+     mainsatlevel = sigmamainret / nmainsat   ! OLD saturation level of the main wall
+  endif
+  
+  if (ndivsat == 0.0) then
+     divsatlevel = 1.0   ! Wall always saturated --> No wall implantation --> Only reflection and prompy recycling
+  else
+     divsatlevel = sigmadivret / ndivsat   ! OLD saturation level of the main wall
+  endif
  
   rclw_recl = (tsuold+dsulold) * (1.0 - rnmain) * mainsatlevel   ! promptly recycled flux into the main wall in s^-1 (NEW source for core plasma)
   rcld_recl = (1.-rcmb)*(dsuold+rcls) * (1.0 - rndiv) * divsatlevel   ! promptly recycled flux into the divertor wall in s^-1 (NEW source for core plasma)
