@@ -683,17 +683,21 @@ class aurora_sim:
 
         
         # Calculate parallel loss frequency using different connection lengths in the SOL and in the limiter shadow
+        v_par = np.zeros_like(self._Te.T)  # space x time
         dv = np.zeros_like(self._Te.T)  # space x time
 
         # Ti may not be reliable in SOL, replace it by Te
         Ti = self._Ti if trust_SOL_Ti else self._Te
 
         # open SOL
+        v_par[ids:idl] = vpf * np.sqrt(3.0 * Ti.T[ids:idl] + self._Te.T[ids:idl])
         dv[ids:idl] = vpf * np.sqrt(3.0 * Ti.T[ids:idl] + self._Te.T[ids:idl])/ self.namelist["clen_divertor"]
 
         # limiter shadow
+        v_par[idl:] = vpf * np.sqrt(3.0 * Ti.T[idl:] + self._Te.T[idl:])
         dv[idl:] = vpf * np.sqrt(3.0 * Ti.T[idl:] + self._Te.T[idl:]) / self.namelist["clen_limiter"]
         
+        v_par, _ = np.broadcast_arrays(v_par, self.time_grid[None])
         dv, _ = np.broadcast_arrays(dv, self.time_grid[None])
 
         # if a peak mach number during the ELM is desired, then
@@ -707,19 +711,25 @@ class aurora_sim:
                                                                 self.time_grid,
                                                                 self.namelist["ELM_model"],
                                                                 self.namelist['timing'])/self.namelist["SOL_mach"]
+            v_par_rescaled = np.zeros_like(v_par)
             dv_rescaled = np.zeros_like(dv)
             # rescale
             for i in range(0,ids):
+                v_par_rescaled[i,:] = v_par[i,:]
                 dv_rescaled[i,:] = dv[i,:]
             for i in range(ids,idl):
+                v_par_rescaled[i,:] = v_par[i,:]*rescale_factor
                 dv_rescaled[i,:] = dv[i,:]*rescale_factor
-            for i in range(idl,len(dv)):  
+            for i in range(idl,len(dv)): 
+                v_par_rescaled[i,:] = v_par[i,:]
                 dv_rescaled[i,:] = dv[i,:]
                 
+            self.v_par = v_par_rescaled
             return np.asfortranarray(dv_rescaled)
         
         else:
             
+            self.v_par = v_par
             return np.asfortranarray(dv)
 
 
