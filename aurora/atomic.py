@@ -1384,8 +1384,10 @@ def read_adf12(filename, block, Ebeam, ne_cm3, Ti_eV, zeff):
                 first_line = f.readline()
 
             cer_line["header"] = first_line
-            cer_line["qefref"] = np.float(f.readline()[:63].replace("D", "e"))
-            cer_line["parmref"] = np.float_(f.readline()[:63].replace("D", "e").split())
+            cer_line["qefref"] = float(f.readline()[:63].replace("D", "e"))
+            cer_line["parmref"] = np.asarray(
+                f.readline()[:63].replace("D", "e").split(), dtype=float
+            )
             cer_line["nparmsc"] = np.int_(f.readline()[:63].split())
 
             for ipar, npar in enumerate(cer_line["nparmsc"]):
@@ -1399,7 +1401,9 @@ def read_adf12(filename, block, Ebeam, ne_cm3, Ti_eV, zeff):
                             if q == 0:
                                 params.append(name)
 
-                        values = np.float_(line[:63].replace("D", "E").split())
+                        values = np.asarray(
+                            line[:63].replace("D", "E").split(), dtype=float
+                        )
                         values = values[values > 0]
                         if not len(values):
                             continue

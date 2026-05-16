@@ -1,7 +1,11 @@
 name = "aurora"
 __version__ = "3.1.0"
 
-import numpy as np, os
+import os
+
+from ._compat import install_runtime_compat
+
+install_runtime_compat()
 
 from .core import *
 from .atomic import *
