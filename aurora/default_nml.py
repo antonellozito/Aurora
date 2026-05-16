@@ -100,6 +100,7 @@ def load_default_namelist():
             "ELM_flag": False,
             "ELM_time_windows": None,
             "ELM_frequency": [100], # Hz
+            "delay_duration": [0],  # ms
             "crash_duration": [0.5],  # ms
             "plateau_duration": [1.0],  # ms
             "recovery_duration": [0.5],  # ms

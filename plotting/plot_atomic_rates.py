@@ -9,7 +9,7 @@ def plot(namelist,exp_data,asim,out,time_plot,time_exp_shift=0.0,xmin=None,xmax=
     
     rhop_exp = exp_data[f'{namelist["imp"]}_density_plasma']['rhop'].transpose()[:,0]
     n_imp_exp = exp_data[f'{namelist["imp"]}_density_plasma'][f'n_{namelist["imp"]}'].transpose()
-    n_imp_unc_exp = exp_data[f'{namelist["imp"]}_density_plasma'][f'n_{namelist["imp"]}_unc'].transpose()
+    #n_imp_unc_exp = exp_data[f'{namelist["imp"]}_density_plasma'][f'n_{namelist["imp"]}_unc'].transpose()
     
     time_exp = exp_data[f'{namelist["imp"]}_density_plasma']['time'].transpose() + time_exp_shift
     
@@ -20,7 +20,7 @@ def plot(namelist,exp_data,asim,out,time_plot,time_exp_shift=0.0,xmin=None,xmax=
     idx_exp = np.argmin(np.abs(np.asarray(time_exp) - time_plot))
     
     n_imp_exp = n_imp_exp[:,idx_exp]
-    n_imp_unc_exp = n_imp_unc_exp[:,idx_exp]
+    #n_imp_unc_exp = n_imp_unc_exp[:,idx_exp]
     
     nz = out['nz']
     nimp = nz[:,:,idx]
@@ -48,7 +48,7 @@ def plot(namelist,exp_data,asim,out,time_plot,time_exp_shift=0.0,xmin=None,xmax=
         colors = colors + (cmap(color_indices[i]),) 
     
     ax1.set_title('Simulation', loc='right', fontsize = 12)
-    ax1.errorbar(rhop_exp,n_imp_exp,yerr=n_imp_unc_exp,ecolor=light_blue,linewidth=1,fmt=' ',zorder=0)
+    #ax1.errorbar(rhop_exp,n_imp_exp,yerr=n_imp_unc_exp,ecolor=light_blue,linewidth=1,fmt=' ',zorder=0)
     ax1.scatter(rhop_exp,n_imp_exp,color=blue,zorder=1,label='Experiment')
     for i in range(0,nimp.shape[1]):
         ax1.plot(asim.rhop_grid,nimp[:,i],linewidth=2,color=colors[i],label=f'Simulation, z = {i}')

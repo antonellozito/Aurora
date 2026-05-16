@@ -1926,7 +1926,7 @@ class aurora_sim:
             Radial coordinate to use in plotting, one of ['rvol','rhop']. Default is 'rvol'.
         """
         _prof = getattr(self, var)
-        prof = np.reshape(_prof, (1, _prof.shape[1], _prof.shape[0]))
+        prof = np.reshape(_prof.T, (1, _prof.shape[1], _prof.shape[0]))
         qlabels = {'ne': '$n_e$ [cm$^{{-3}}$]', 'Te': '$T_e$ [eV]', 'Ti': '$T_i$ [eV]', 'n0': '$n_n$ [cm$^{{-3}}$]'}
                    
         plot_tools.slider_plot(
@@ -1939,6 +1939,8 @@ class aurora_sim:
             x_line = self.rvol_lcfs if rad_coord=='rvol' else 1.0,
             zlim = True,
         )
+        
+        return prof
 
     def reservoirs_time_traces(self, plot=True, ylim = True, axs=None, plot_resolutions=False):
         """Plot the particle content in the various reservoirs

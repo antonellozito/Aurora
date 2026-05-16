@@ -1,3 +1,9 @@
+# TODO: duration of crash, plateau and recovery phases different for different rhos, and different for D and v
+# TODO: different delays from the start of the ELM cycles for different rhos, and different for D and v
+# TODO: Mach number as function of rho in the SOL
+# TODO: different delays from the start of the ELM cycles for different rhos, also for Mach
+# TODO: also adjust the time-dependent impact energy on the walls, not according to ELM_cycle_shape but to aforementioned parameters
+
 """
 Functions to efficiently set a radial profile and a time dependency
 for the anomalous transport coefficient (particle diffusivity and
@@ -262,29 +268,79 @@ def ELM_model(timing, ELM_model, rhop_grid, rhop, data_inter_ELM, data_intra_ELM
         
     ELM_time_windows = ELM_model['ELM_time_windows'] # s
     ELM_frequency = ELM_model['ELM_frequency'] # Hz
+    delay_duration = ELM_model['delay_duration'] # ms
     crash_duration = ELM_model['crash_duration'] # ms
     plateau_duration = ELM_model['plateau_duration'] # ms
     recovery_duration = ELM_model['recovery_duration'] # ms
     
+    # if not(type(delay_duration) == type(crash_duration) == type(plateau_duration) == type(recovery_duration)):
+    #     raise ValueError("The durations of the ELM cycles must be of the same type.")    
+    # else:
+    #     if isinstance(delay_duration, list) and (
+    #             len(delay_duration) != len(crash_duration) or len(delay_duration) != len(plateau_duration) or
+    #             len(delay_duration) != len(recovery_duration)):
+    #         raise ValueError("The durations of the ELM cycles must habe the same length.")       
+            
     times_transport = [timing['times'][0]]
     coeffs = [coeffs_inter_ELM]
     
     # Assuming that ELMs take place throughout the entire simulation duration
     if ELM_time_windows is None:     
         
-        ELM_duration = (crash_duration + plateau_duration + recovery_duration)/1000 # s
-        ELM_period = 1/ELM_frequency # s
+        # Different durations of the ELM cycle for different rhos
+        if isinstance(delay_duration, list) and len(delay_duration) > 1:
+            
+            delay_duration = np.array(delay_duration)
+            crash_duration = np.array(crash_duration)
+            plateau_duration = np.array(plateau_duration)
+            recovery_duration = np.array(recovery_duration)
+            
+            ELM_duration_temp = (delay_duration + crash_duration + plateau_duration + recovery_duration)/1000 # s
+            difference_duration = (np.max(ELM_duration_temp) - ELM_duration_temp) # s
+            ELM_duration = (delay_duration + crash_duration + plateau_duration + recovery_duration
+                            + difference_duration)/1000 # s
+            ELM_period = 1/ELM_frequency # s    
+            
+            while times_transport[-1] < timing['times'][-1]:
+                times_transport.append(times_transport[-1]+timing['dt_start'][0])
+                
+                
+                
+                
+                
+                # times_transport.append(times_transport[-1]+(ELM_period-ELM_duration))
+                # coeffs.append(coeffs_inter_ELM)
+                # times_transport.append(times_transport[-1]+crash_duration/1000)
+                # coeffs.append(coeffs_intra_ELM)
+                # if plateau_duration > 0:
+                #     times_transport.append(times_transport[-1]+plateau_duration/1000)
+                #     coeffs.append(coeffs_intra_ELM)
+                # times_transport.append(times_transport[-1]+recovery_duration/1000)
+                # coeffs.append(coeffs_inter_ELM)
+            
+            
+            
         
-        while times_transport[-1] < timing['times'][-1]:
-            times_transport.append(times_transport[-1]+(ELM_period-ELM_duration))
-            coeffs.append(coeffs_inter_ELM)
-            times_transport.append(times_transport[-1]+crash_duration/1000)
-            coeffs.append(coeffs_intra_ELM)
-            if plateau_duration > 0:
-                times_transport.append(times_transport[-1]+plateau_duration/1000)
+        # Same duration of the ELM cycles for all rhos
+        else:
+        
+            ELM_duration = (crash_duration + plateau_duration + recovery_duration)/1000 # s
+            # ELM_duration = (delay_duration + crash_duration + plateau_duration + recovery_duration)/1000 # s
+            ELM_period = 1/ELM_frequency # s
+            
+            while times_transport[-1] < timing['times'][-1]:
+                times_transport.append(times_transport[-1]+(ELM_period-ELM_duration))
+                coeffs.append(coeffs_inter_ELM)
+                # if delay_duration > 0:
+                #     times_transport.append(times_transport[-1]+delay_duration/1000)
+                #     coeffs.append(coeffs_inter_ELM)
+                times_transport.append(times_transport[-1]+crash_duration/1000)
                 coeffs.append(coeffs_intra_ELM)
-            times_transport.append(times_transport[-1]+recovery_duration/1000)
-            coeffs.append(coeffs_inter_ELM)
+                if plateau_duration > 0:
+                    times_transport.append(times_transport[-1]+plateau_duration/1000)
+                    coeffs.append(coeffs_intra_ELM)
+                times_transport.append(times_transport[-1]+recovery_duration/1000)
+                coeffs.append(coeffs_inter_ELM)
        
     # Assuming that ELMs take place only in some reduced time windows 
     else:
