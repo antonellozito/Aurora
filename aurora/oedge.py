@@ -1856,7 +1856,7 @@ class oedge_output:
                 )
 
         # Remove any (0, 0) data points
-        drop_idx = np.array([], dtype=np.int)
+        drop_idx = np.array([], dtype=int)
         for i in range(0, len(x)):
             if x[i] == 0.0 and y[i] == 0.0:
                 drop_idx = np.append(drop_idx, i)
