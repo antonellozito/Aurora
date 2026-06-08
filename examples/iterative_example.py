@@ -151,7 +151,7 @@ Te_all.append(Te_eV)
 
 # modify background temperature and density profiles based on tot_rad_dens
 rhop_grid = asim.rhop_grid
-Erad = np.trapz(tot_rad_dens[-1 * n_rep :, :], axis=0, dx=dt) * 1.6e-13
+Erad = np.trapezoid(tot_rad_dens[-1 * n_rep :, :], axis=0, dx=dt) * 1.6e-13
 Te_eV = radiation_cooling(rhop, rhop_grid, ne_cm3, nd_cm3, nz_init, Te_eV, Erad)
 ne_cm3, Te_eV = dilution_cooling(
     rhop, rhop_grid, ne_cm3, nd_cm3, Te_eV, nz_init * 0.0, nz_init
@@ -187,7 +187,7 @@ for i in np.arange(num_sims):
 
     # modify background temperature and density profiles
     rhop_grid = asim.rhop_grid
-    Erad = np.trapz(tot_rad_dens[-1 * n_rep :, :], axis=0) * 1.6e-13
+    Erad = np.trapezoid(tot_rad_dens[-1 * n_rep :, :], axis=0) * 1.6e-13
     Te_eV = radiation_cooling(rhop, rhop_grid, ne_cm3, nd_cm3, nz_init, Te_eV, Erad)
     ne_cm3, Te_eV = dilution_cooling(
         rhop, rhop_grid, ne_cm3, nd_cm3, Te_eV, nz_old, nz_init

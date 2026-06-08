@@ -210,7 +210,7 @@ def time_average_profiles(timing,time,data,interval):
     for i in range(0,len(times)):
         idx_lower = np.argmin(np.abs(np.asarray(res) - (times[i]-interval)))
         idx_upper = np.argmin(np.abs(np.asarray(res) - times[i]))
-        data_average[:,:,i] = np.trapz(temp[:,:,idx_lower:idx_upper],res[idx_lower:idx_upper])/interval
+        data_average[:,:,i] = np.trapezoid(temp[:,:,idx_lower:idx_upper],res[idx_lower:idx_upper])/interval
             
     return times, data_average
 
@@ -249,7 +249,7 @@ def time_average_reservoirs(timing,time,data,interval):
     for i in range(0,len(times)):
         idx_lower = np.argmin(np.abs(np.asarray(res) - (times[i]-interval)))
         idx_upper = np.argmin(np.abs(np.asarray(res) - times[i]))
-        data_average[i] = np.trapz(temp[idx_lower:idx_upper],res[idx_lower:idx_upper])/interval
+        data_average[i] = np.trapezoid(temp[idx_lower:idx_upper],res[idx_lower:idx_upper])/interval
             
     return times, data_average
 

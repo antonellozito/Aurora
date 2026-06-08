@@ -2231,8 +2231,8 @@ class aurora_sim:
                 print("Warning: significant error in particle conservation!")
 
             Ntot = reservoirs["integ_source"][-1]
-            dN = np.trapz((reservoirs["total"] / Ntot - reservoirs["integ_source"] / Ntot) ** 2, self.time_out)
-            dN /= np.trapz((reservoirs["integ_source"] / Ntot) ** 2, self.time_out)
+            dN = np.trapezoid((reservoirs["total"] / Ntot - reservoirs["integ_source"] / Ntot) ** 2, self.time_out)
+            dN /= np.trapezoid((reservoirs["integ_source"] / Ntot) ** 2, self.time_out)
             print('Particle conservation error %.1f%%' % (np.sqrt(dN) * 100))
         
             ax2.set_xlim(self.time_out[[0, -1]])
