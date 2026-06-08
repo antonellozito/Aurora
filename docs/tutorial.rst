@@ -27,26 +27,27 @@ Once you have loaded the default namelist, have a look at the `namelist` diction
 
 Some of them, like the name of the device, are only important if automatic fetching of the EFIT equilibrium through `MDSplus` is required, or else it can be ignored (leaving it to its default value). Most of the parameter names should be fairly self-descriptive.
 
-Aurora leverages the `omfit_classes` package to interface with MDS+, EFIT, and a number of other codes. Thanks to this, users can focus more on their applications of interest, and less on re-inventing the wheel to write code that the OMFIT Team has kindly made public! To follow the rest of this tutorial, do::
+Aurora ships a small internal helper set to interface with MDS+ and EFIT. To follow the rest of this tutorial, do::
 
-  from omfit_classes import omfit_eqdsk, omfit_gapy
+  from aurora.eqdsk import GEQDSK
+  
 
 Next, we read in a magnetic equilibrium. You can find an example from a C-Mod discharge in the `examples` directory::
   
-  geqdsk = omfit_eqdsk.OMFITgeqdsk('example.gfile')
+  geqdsk = GEQDSK('example.gfile')
 
-The output `geqdsk` dictionary contains the contents of the EFIT geqdsk file, with additional processing done by the `omfit_classes` package for flux surfaces. Only some of the dictionary fields are used; refer to the :py:mod:`~aurora.grids_utils` methods for details. The `geqdsk` dictionary is used to create a mapping between the `rhop` grid (square root of normalized poloidal flux) and a `rvol` grid, defined by the normalized volume of each flux surface. Aurora, like STRAHL, runs its simulations on the `rvol` grid. 
+The output `geqdsk` dictionary contains the contents of the EFIT geqdsk file, with additional processing done by Aurora's internal EQDSK helper for flux surfaces. Only some of the dictionary fields are used; refer to the :py:mod:`~aurora.grids_utils` methods for details. The `geqdsk` dictionary is used to create a mapping between the `rhop` grid (square root of normalized poloidal flux) and a `rvol` grid, defined by the normalized volume of each flux surface. Aurora, like STRAHL, runs its simulations on the `rvol` grid. 
 
 We next need to read in some kinetic profiles, for example from an `input.gacode` file (available in the `examples` directory)::
   
-  inputgacode = omfit_gapy.OMFITgacode('example.input.gacode')
+  input_profiles = read_input_profiles('example.input.gacode')
 
-Other file formats (e.g. plasma statefiles, TRANSP outputs, etc.) may also be read with `omfit_gapy` or other OMFIT-distributed packages. It is however not important to Aurora how the users get kinetic profiles: all that matters is that they are stored in the `namelist['kin_prof']` dictionary. To set up time-independent kinetic profiles we can use::
+It is not important to Aurora how the users get kinetic profiles: all that matters is that they are stored in the `namelist['kin_prof']` dictionary. To set up time-independent kinetic profiles we can use::
 
   kp = namelist['kin_profs']
-  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
-  kp['ne']['vals'] = inputgacode['ne']*1e13    # 1e19 m^-3 --> cm^-3
-  kp['Te']['vals'] = inputgacode['Te']*1e3     # keV --> eV
+  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(input_profiles['polflux']/input_profiles['polflux'][-1])
+  kp['ne']['vals'] = input_profiles['ne']*1e13    # 1e19 m^-3 --> cm^-3
+  kp['Te']['vals'] = input_profiles['Te']*1e3     # keV --> eV
 
 Note that both electron density (`ne`) and temperature (`Te`) must be saved on a `rhop` grid. This grid is internally used by Aurora to map to the `rvol` grid. Also note that, unless otherwise stated, Aurora inputs are always in CGS units, i.e. all spatial quantities are given in :math:`cm`!! (the extra exclamation mark is there for a good reason...).
 
@@ -252,7 +253,7 @@ Radiation profiles might be also plotted automatically, with all the default opt
 
 Aurora's radiation modeling capabilities may also be useful when assessing total power radiation for integrated modeling. The :py:func:`~aurora.radiation.radiation_model` function allows one to easily obtain the most important radiation terms at a single time slice, both as power densities (units of :math:`MW/cm^{-3}`) and absolute power (units of :math:`MW`). To obtain the latter form, we need to integrate over flux surface volumes. To do so, we make use of the `geqdsk` dictionary obtained via::
 
-  geqdsk = omfit_eqdsk.OMFITgeqdsk('example.gfile')
+  geqdsk = GEQDSK('example.gfile')
 
 We then pass that to :py:func:`~aurora.radiation.radiation_model`, together with the impurity atomic symbol (`imp`), the `rhop` grid array, electron density (`ne_cm3`) and temperature (`Te_eV`), and optionally also background neutral densities to include thermal charge exchange::
 
@@ -319,16 +320,16 @@ Ionization equilibrium
 
 It may be useful to compare and contrast the charge state distributions obtained from an Aurora run with the distributions predicted by pure ionization equilibium, i.e. by atomic physics only, with no trasport. To do this, we only need some kinetic profiles, which for this example we will load from the sample `input.gacode` file available in the "examples" directory::
 
-  import omfit_gapy
-  inputgacode = omfit_gapy.OMFITgacode('example.input.gacode')
+  
+  input_profiles = read_input_profiles('example.input.gacode')
 
 Recall that Aurora generally uses CGS units, so we need to convert electron densities to :math:`cm^{-3}` and electron temperatures to :math:`eV`::
 
-  rhop = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
-  ne_vals = inputgacode['ne']*1e13 # 1e19 m^-3 --> cm^-3
-  Te_vals = inputgacode['Te']*1e3  # keV --> eV
+  rhop = np.sqrt(input_profiles['polflux']/input_profiles['polflux'][-1])
+  ne_vals = input_profiles['ne']*1e13 # 1e19 m^-3 --> cm^-3
+  Te_vals = input_profiles['Te']*1e3  # keV --> eV
 
-Here we also defined a `rhop` grid from the poloidal flux values in the `inputgacode` dictionary. We can then use the :py:func:`~aurora.atomic.get_atom_data` function to read atomic effective ionization ("scd") and recombination ("acd") from the default ADAS files listed in :py:func:`~aurora.adas_files.adas_files_dict`. In this example, we are going to focus on calcium ions::
+Here we also defined a `rhop` grid from the poloidal flux values in the `input_profiles` dictionary. We can then use the :py:func:`~aurora.atomic.get_atom_data` function to read atomic effective ionization ("scd") and recombination ("acd") from the default ADAS files listed in :py:func:`~aurora.adas_files.adas_files_dict`. In this example, we are going to focus on calcium ions::
 
   atom_data = aurora.get_atom_data('Ca',['scd','acd'])
 
@@ -364,16 +365,17 @@ We start by setting the some input parameters as in the previous tutorial::
   
   namelist = aurora.load_default_namelist()
   
-  from omfit_classes import omfit_eqdsk, omfit_gapy
-
-  geqdsk = omfit_eqdsk.OMFITgeqdsk('example.gfile')
+  from aurora.eqdsk import GEQDSK
   
-  inputgacode = omfit_gapy.OMFITgacode('example.input.gacode')
+
+  geqdsk = GEQDSK('example.gfile')
+  
+  input_profiles = read_input_profiles('example.input.gacode')
 
   kp = namelist['kin_profs']
-  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
-  kp['ne']['vals'] = inputgacode['ne']*1e13    # 1e19 m^-3 --> cm^-3
-  kp['Te']['vals'] = inputgacode['Te']*1e3     # keV --> eV
+  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(input_profiles['polflux']/input_profiles['polflux'][-1])
+  kp['ne']['vals'] = input_profiles['ne']*1e13    # 1e19 m^-3 --> cm^-3
+  kp['Te']['vals'] = input_profiles['Te']*1e3     # keV --> eV
   
   imp = namelist['imp'] = 'Ar'
   namelist["main_element"] = "D"
@@ -483,16 +485,17 @@ We start by setting the some input parameters as in the previous tutorial::
   
   namelist = aurora.load_default_namelist()
   
-  from omfit_classes import omfit_eqdsk, omfit_gapy
-
-  geqdsk = omfit_eqdsk.OMFITgeqdsk('example.gfile')
+  from aurora.eqdsk import GEQDSK
   
-  inputgacode = omfit_gapy.OMFITgacode('example.input.gacode')
+
+  geqdsk = GEQDSK('example.gfile')
+  
+  input_profiles = read_input_profiles('example.input.gacode')
 
   kp = namelist['kin_profs']
-  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
-  kp['ne']['vals'] = inputgacode['ne']*1e13    # 1e19 m^-3 --> cm^-3
-  kp['Te']['vals'] = inputgacode['Te']*1e3     # keV --> eV
+  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(input_profiles['polflux']/input_profiles['polflux'][-1])
+  kp['ne']['vals'] = input_profiles['ne']*1e13    # 1e19 m^-3 --> cm^-3
+  kp['Te']['vals'] = input_profiles['Te']*1e3     # keV --> eV
   
   imp = namelist['imp'] = 'He'
   namelist["main_element"] = "D"
@@ -631,16 +634,17 @@ We start by setting the some input parameters as in the previous tutorial: ::
   
   namelist = aurora.load_default_namelist()
   
-  from omfit_classes import omfit_eqdsk, omfit_gapy
-
-  geqdsk = omfit_eqdsk.OMFITgeqdsk('example.gfile')
+  from aurora.eqdsk import GEQDSK
   
-  inputgacode = omfit_gapy.OMFITgacode('example.input.gacode')
+
+  geqdsk = GEQDSK('example.gfile')
+  
+  input_profiles = read_input_profiles('example.input.gacode')
 
   kp = namelist['kin_profs']
-  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(inputgacode['polflux']/inputgacode['polflux'][-1])
-  kp['ne']['vals'] = inputgacode['ne']*1e13    # 1e19 m^-3 --> cm^-3
-  kp['Te']['vals'] = inputgacode['Te']*1e3     # keV --> eV
+  kp['Te']['rhop'] = kp['ne']['rhop'] = np.sqrt(input_profiles['polflux']/input_profiles['polflux'][-1])
+  kp['ne']['vals'] = input_profiles['ne']*1e13    # 1e19 m^-3 --> cm^-3
+  kp['Te']['vals'] = input_profiles['Te']*1e3     # keV --> eV
   
   imp = namelist['imp'] = 'He'
   namelist["main_element"] = "D"

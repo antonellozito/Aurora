@@ -81,8 +81,8 @@ def _setup_kin_profs(
         Electron temperature on rhop grid [:math:`eV`].
     Ti_eV_in : 1D array
         Main ion temperature on rhop grid [:math:`eV`].
-    geqdsk : `omfit_classes.omfit_eqdsk.OMFITgeqdsk` class instance
-        gEQDSK file as processed by the `omfit_classes.omfit_eqdsk.OMFITgeqdsk` class.
+    geqdsk : `aurora.eqdsk.GEQDSK` class instance
+        gEQDSK file as processed by the `aurora.eqdsk.GEQDSK` class.
     bound_sep_cm : float
         Distance between the wall/boundary and the separatrix [:math:`cm`].
     lim_sep_cm : float
@@ -276,8 +276,8 @@ def run_kn1d(
         Electron temperature on rhop grid [:math:`eV`].
     Ti_eV : 1D array
         Main ion temperature on rhop grid [:math:`eV`].
-    geqdsk : `omfit_classes.omfit_eqdsk.OMFITgeqdsk` class instance
-        gEQDSK file as processed by the `omfit_classes.omfit_eqdsk.OMFITgeqdsk` class.
+    geqdsk : `aurora.eqdsk.GEQDSK` class instance
+        gEQDSK file as processed by the `aurora.eqdsk.GEQDSK` class.
     p_H2_mTorr : float
         Pressure of molecular hydrogen-isotopes measured at the wall. This may be estimated
         from experimental pressure gauges. This variable effectively sets the amplitude of the

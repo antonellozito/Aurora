@@ -77,4 +77,3 @@ python_add_library(_aurora MODULE "${CMAKE_CURRENT_BINARY_DIR}/_auroramodule.c"
 target_link_libraries(_aurora PRIVATE fortranobject)
 
 install(TARGETS _aurora DESTINATION aurora/)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/sitecustomize.py" DESTINATION .)

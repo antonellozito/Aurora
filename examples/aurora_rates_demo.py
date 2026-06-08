@@ -42,10 +42,10 @@ atom_data = aurora.get_atom_data(
 # ------------------------------------------------------- #
 # interpolate on arbitrary ne and Te grid on the 2D plane
 # load an example gEQDSK from the Aurora examples directory
-from omfit_classes.omfit_eqdsk import OMFITgeqdsk
+from aurora.eqdsk import GEQDSK
 
 examples_dir = os.path.dirname(os.path.abspath(__file__))
-geqdsk = OMFITgeqdsk(examples_dir + "/example.gfile")
+geqdsk = GEQDSK(examples_dir + "/example.gfile")
 
 # To plot the equilibrium:
 # geqdsk.plot()

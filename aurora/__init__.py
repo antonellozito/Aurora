@@ -3,10 +3,6 @@ __version__ = "3.1.0"
 
 import os
 
-from ._compat import install_runtime_compat
-
-install_runtime_compat()
-
 from .core import *
 from .atomic import *
 from .adas_files import *

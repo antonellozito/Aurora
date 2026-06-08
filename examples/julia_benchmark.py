@@ -4,7 +4,7 @@ Script to benchmark basic Julia version against Fortran one.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from omfit_classes import omfit_eqdsk
+from aurora.eqdsk import GEQDSK
 import pickle as pkl
 import scipy, sys, os
 import time
@@ -19,7 +19,7 @@ kp = namelist["kin_profs"]
 
 # Use gfile and statefile in local directory:
 examples_dir = os.path.dirname(os.path.abspath(__file__))
-geqdsk = omfit_eqdsk.OMFITgeqdsk(examples_dir + "/example.gfile")
+geqdsk = GEQDSK(examples_dir + "/example.gfile")
 
 
 # save kinetic profiles on a rhop (sqrt of norm. pol. flux) grid

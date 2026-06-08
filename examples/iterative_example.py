@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 plt.ion()
-from omfit_classes import omfit_eqdsk
+from aurora.eqdsk import GEQDSK
 import sys, copy, os
 
 # Make sure that package home is added to sys.path
@@ -58,7 +58,7 @@ namelist = aurora.default_nml.load_default_namelist()
 
 # Use gfile and statefile in local directory:
 examples_dir = os.path.dirname(os.path.abspath(__file__))
-geqdsk = omfit_eqdsk.OMFITgeqdsk(examples_dir + "/example.gfile")
+geqdsk = GEQDSK(examples_dir + "/example.gfile")
 
 # save kinetic profiles on a rhop (sqrt of norm. pol. flux) grid
 # parameterization f=(f_center-f_edge)*(1-rhop**alpha1)**alpha2 + f_edge

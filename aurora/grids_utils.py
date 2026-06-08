@@ -531,7 +531,7 @@ def get_HFS_LFS(geqdsk, rho_pol=None):
     Parameters
     ----------
     geqdsk : dict
-        Dictionary containing the g-EQDSK file as processed by the `omfit_classes.omfit_eqdsk`.
+        Dictionary containing the g-EQDSK file as processed by `aurora.eqdsk`.
     rho_pol : array, optional
         Array corresponding to a grid in sqrt of normalized poloidal flux for which a
         corresponding rvol grid should be found. If left to None, an arbitrary grid will be
@@ -593,7 +593,7 @@ def get_rhopol_rvol_mapping(geqdsk, rho_pol=None):
     Parameters
     ----------
     geqdsk : dict
-        Dictionary containing the g-EQDSK file as processed by `omfit_classes.omfit_eqdsk`. 
+        Dictionary containing the g-EQDSK file as processed by `aurora.eqdsk`. 
     rho_pol : array, optional
         Array corresponding to a grid in sqrt of normalized poloidal flux for which a 
         corresponding rvol grid should be found. If left to None, an arbitrary grid will be 
@@ -794,7 +794,7 @@ def estimate_clen(geqdsk):
     Parameters
     ----------
     geqdsk : dict
-        EFIT g-EQDSK as processed by `omfit_classes.omfit_eqdsk`.
+        EFIT g-EQDSK as processed by `aurora.eqdsk`.
 
     Returns
     -------
@@ -825,7 +825,7 @@ def estimate_clen(geqdsk):
 def estimate_boundary_distance(shot, device, time_ms):
     """Obtain a simple estimate for the distance between the LCFS and the wall boundary.
     This requires access to the A_EQDSK on the EFIT01 tree on MDS+. Users who may find that this call
-    does not work for their device may try to adapt the OMFITmdsValue TDI string.
+    does not work for their device may try to adapt the `MDSValue` TDI string.
 
     Parameters
     ----------
@@ -845,10 +845,10 @@ def estimate_boundary_distance(shot, device, time_ms):
         taken to be 2/3 of the bound_sep distance.
     """
     # import this here, so that it is not required for the whole package
-    from omfit_classes.omfit_mds import OMFITmdsValue
+    from .mds import MDSValue
 
     try:
-        tmp = OMFITmdsValue(
+        tmp = MDSValue(
             server=device,
             treename="EFIT01",
             shot=shot,
@@ -856,7 +856,7 @@ def estimate_boundary_distance(shot, device, time_ms):
         )  # CMOD format, take ORIGHT
         assert tmp.check()
     except Exception:
-        tmp = OMFITmdsValue(
+        tmp = MDSValue(
             server=device,
             treename="EFIT01",
             shot=shot,
