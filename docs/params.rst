@@ -906,7 +906,7 @@ Device
      - Description          
    * - `device`
      - 'CMOD'
-     - Name of experimental device, used by MDS+ if device database can be read via `omfit_eqdsk <https://pypi.org/project/omfit-eqdsk/>`_.
+     - Name of experimental device, used by MDS+ if device database can be read via Aurora's internal EFIT helper.
    * - `shot`
      - 99999
      - Shot number, only used in combination with `device` to connect to MDS+ databases.

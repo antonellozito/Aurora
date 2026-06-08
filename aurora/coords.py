@@ -40,7 +40,7 @@ def get_rhop_RZ(R, Z, geqdsk):
 def vol_average(
     quant,
     rhop,
-    method="omfit",
+    method="flux_surface",
     geqdsk=None,
     device=None,
     shot=None,
@@ -56,24 +56,24 @@ def vol_average(
         but other dimensions may be exist afterwards.
     rhop : array, (space,)
         Radial rhop coordinate in cm units.
-    method : {'omfit','fs'}
+    method : {'flux_surface','fs'}
         Method to evaluate the volume average. The two options correspond to the way to compute
-        volume averages via the OMFIT fluxSurfaces classes and via a simpler cumulative sum in r_V
-        coordinates. The methods only slightly differ in their results. Note that 'omfit' will fail if
+        volume averages via the flux-surface helper class and via a simpler cumulative sum in r_V
+        coordinates. The methods only slightly differ in their results. Note that 'flux_surface' will fail if
         rhop extends beyond the LCFS, while method 'fs' can estimate volume averages also into the SOL.
-        Default is method='omfit'.
-    geqdsk : output of the :py:class:`omfit_classes.omfit_eqdsk.OMFITgeqdsk` class, postprocessing the EFIT geqdsk file
+        Default is method='flux_surface'.
+    geqdsk : output of the :py:class:`aurora.eqdsk.GEQDSK` class, postprocessing the EFIT geqdsk file
         containing the magnetic geometry. If this is left to None, the function internally tries to fetch
-        it using MDS+ and `omfit_classes.omfit_eqdsk`. In this case, device, shot and time to fetch the equilibrium
+        it using MDS+ and `aurora.eqdsk`. In this case, device, shot and time to fetch the equilibrium
         are required.
     device : str
-        Device name. Note that routines for this device must be implemented in `omfit_classes.omfit_eqdsk` for this to work.
+        Device name. Note that routines for this device must be implemented in `aurora.eqdsk` for this to work.
     shot : int
         Shot number of the above device, e.g. 1101014019 for C-Mod.
     time : float
         Time at which equilibrium should be fetched in units of ms.
     return_geqdsk : bool
-        If True, `omfit_classes.omfit_eqdsk` dictionary is also returned
+        If True, the `aurora.eqdsk` dictionary is also returned
 
     Returns
     -------
@@ -92,14 +92,14 @@ def vol_average(
         )
 
     if geqdsk is None:
-        # Fetch device geqdsk from MDS+ and post-process it using the OMFIT geqdsk format.
+        # Fetch device geqdsk from MDS+ and post-process it using Aurora's geqdsk format.
         try:
-            from omfit_classes import omfit_eqdsk
+            from . import eqdsk
         except:
             raise ValueError(
-                "Could not import omfit_classes.omfit_eqdsk! Install with pip install omfit_classes"
+                "Could not import aurora.eqdsk!"
             )
-        geqdsk = omfit_eqdsk.OMFITgeqdsk("").from_mdsplus(
+        geqdsk = eqdsk.GEQDSK("").from_mdsplus(
             device=device,
             shot=shot,
             time=time,
@@ -123,8 +123,8 @@ def vol_average(
 
         vol_avg = rV_vol_average(quant[~np.isnan(r_V)], r_V[~np.isnan(r_V)])
 
-    elif method == "omfit":
-        # use fluxSurfaces classes from OMFIT
+    elif method == "flux_surface":
+        # use the flux-surface helper class
         rhopp = np.sqrt(geqdsk["fluxSurfaces"]["geo"]["psin"])
         quantp = interp1d(rhop, quant, bounds_error=False, fill_value="extrapolate")(
             rhopp
@@ -187,7 +187,7 @@ def rad_coord_transform(x, name_in, name_out, geqdsk):
     name_out: str
         input x coordinate ('rhon','psin','rvol', 'rhop','rhov','Rmid','rmid','r/a')
     geqdsk: dict
-        gEQDSK dictionary, as obtained from the omfit-eqdsk package.
+        gEQDSK dictionary, as obtained from Aurora's `eqdsk` helper.
 
     Returns
     -------
@@ -308,9 +308,9 @@ def rhoTheta2RZ(geqdsk, rho, theta, coord_in='rhop', n_line=201):
 
     Parameters
     ----------
-    geqdsk : output of the :py:class:`omfit_classes.omfit_eqdsk.OMFITgeqdsk` class, postprocessing the EFIT geqdsk file
+    geqdsk : output of the :py:class:`aurora.eqdsk.GEQDSK` class, postprocessing the EFIT geqdsk file
         containing the magnetic geometry. If this is left to None, the function internally tries to fetch
-        it using MDS+ and `omfit_classes.omfit_eqdsk`. In this case, device, shot and time to fetch the equilibrium 
+        it using MDS+ and `aurora.eqdsk`. In this case, device, shot and time to fetch the equilibrium 
     rho : np.ndarray
         Values of normalized radial coordinate to consider.
     theta : np.ndarray
@@ -328,8 +328,8 @@ def rhoTheta2RZ(geqdsk, rho, theta, coord_in='rhop', n_line=201):
         Values of the vertical coordinate along flux surfaces.
     '''
     if isinstance(geqdsk, str):
-        from omfit_classes.omfit_eqdsk import OMFITgeqdsk
-        geqdsk = OMFITgeqdsk(geqdsk)
+        from .eqdsk import GEQDSK
+        geqdsk = GEQDSK(geqdsk)
         
     line_m = .9 # line length: 0.9 m
     t = np.linspace(0, 1, n_line)**.5*line_m

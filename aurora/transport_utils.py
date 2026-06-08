@@ -98,7 +98,7 @@ def interp_coeffs(namelist, rhop_grid, data, radial_dependency = False, rhop = N
     
     # Deduce number of charge states
     imp = namelist["imp"]
-    from omfit_classes.utils_math import atomic_element
+    from .elements import atomic_element
     out = atomic_element(symbol=imp)
     spec = list(out.keys())[0]
     Z_imp = int(out[spec]["Z"])

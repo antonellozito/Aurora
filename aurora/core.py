@@ -52,8 +52,8 @@ class aurora_sim:
         Dictionary containing aurora inputs. See default_nml.py for some defaults,
         which users should modify for their runs.
     geqdsk : dict, optional
-        EFIT gfile as returned after postprocessing by the :py:mod:`omfit_classes.omfit_eqdsk`
-        package (OMFITgeqdsk class). If left to None (default), the minor and major radius must be
+        EFIT gfile as returned after postprocessing by :py:mod:`aurora.eqdsk`
+        (`GEQDSK` class). If left to None (default), the minor and major radius must be
         indicated in the namelist in order to create a radial grid.
 
     """
@@ -61,9 +61,7 @@ class aurora_sim:
     def __init__(self, namelist, geqdsk=None):
 
         if namelist is None:
-            # option useful for calls like omfit_classes.OMFITaurora(filename)
-            # A call like omfit_classes.OMFITaurora('test', namelist, geqdsk=geqdsk) is also possible
-            # to initialize the class as a dictionary.
+            # allows initialization as a dictionary-like object.
             return
 
         # make sure that any changes in namelist will not propagate back to the calling function
@@ -73,7 +71,7 @@ class aurora_sim:
         self.imp = namelist["imp"]
 
         # import here to avoid issues when building docs or package
-        from omfit_classes.utils_math import atomic_element
+        from .elements import atomic_element
 
         # get nuclear charge Z and atomic mass number A
         out = atomic_element(symbol=self.imp)
@@ -665,7 +663,7 @@ class aurora_sim:
 
         """
         # import here to avoid issues when building docs or package
-        from omfit_classes.utils_math import atomic_element
+        from .elements import atomic_element
 
         # background mass number (=2 for D)
         self.main_element = self.namelist["main_element"]

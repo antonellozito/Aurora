@@ -58,8 +58,8 @@ def get_neutrals_fsa(neutrals, geqdsk, debug_plots=True):
 
         It is currently assumed that n=0,1 and 2 beam components are provided by the user.
 
-    geqdsk : dictionary output of `omfit_classes.omfit_eqdsk.OMFITgeqdsk` class
-        gEQDSK post-processed dictionary, as given by `omfit_classes.omfit_eqdsk`.
+    geqdsk : dictionary output of `aurora.eqdsk.GEQDSK` class
+        gEQDSK post-processed dictionary, as given by `aurora.eqdsk`.
     debug_plots : bool, optional
         If True, various plots are displayed.
 
@@ -372,10 +372,10 @@ def get_NBI_imp_cxr_q(
 def beam_grid(uvw_src, axis, max_radius=255.0):
     """Method to obtain the 3D orientation of a beam with respect to the device.
     The uvw_src and (normalized) axis arrays may be obtained from the d3d_beams method
-    of fidasim_lib.py in the FIDASIM module in OMFIT.
+    of `fidasim_lib.py` in the FIDASIM Python tooling.
 
     This is inspired by `beam_grid` in fidasim_lib.py of the FIDASIM module (S. Haskey)
-    in OMFIT.
+    in that code base.
     """
 
     pos = uvw_src + 100 * axis

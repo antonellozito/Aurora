@@ -5,15 +5,13 @@ import pandas as pd
 import scipy
 import scipy.io
 from scipy.signal import savgol_filter
-from omfit_classes import omfit_eqdsk, omfit_gapy
+from aurora.eqdsk import GEQDSK
 
 
 def equilibrium(shot,shotfile='EQI',time=0.,exp='augd'):
     
-    equilibrium = omfit_eqdsk.OMFITgeqdsk(filename="dummy_filename")
+    equilibrium = GEQDSK(filename="")
     equilibrium.from_aug_sfutils(shot=shot, time=time, eq_shotfile=shotfile)
-    os.remove(equilibrium.filename)
-    
     return equilibrium
 
 

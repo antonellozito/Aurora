@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 
-# from omfit_classes import omfit_eqdsk
+# from aurora.eqdsk import GEQDSK
 import sys, os
 from scipy.interpolate import interp1d
 import copy

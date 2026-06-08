@@ -26,7 +26,9 @@ of heavy ions and thermal neutrals.
 
 import matplotlib.pyplot as plt
 import os
+from pathlib import Path
 import numpy as np
+import re
 from scipy.interpolate import griddata, interp1d
 import matplotlib as mpl
 import matplotlib.tri as tri
@@ -36,6 +38,88 @@ import warnings
 from scipy import constants
 from . import plot_tools
 from . import coords
+
+
+class SOLPSFile(dict):
+    def __init__(self, filename):
+        super().__init__()
+        self.filename = str(filename)
+        self.load()
+
+    def load(self):
+        self.clear()
+        name = Path(self.filename).name
+
+        if name in {"b2fgmtry", "b2fplasmf"}:
+            with open(self.filename, "r", encoding="utf-8", errors="ignore") as stream:
+                tmp = stream.read()
+            tmp = re.sub("\n", " ", tmp)
+            tmp = tmp.split("*c")
+            tmp = [[item for item in chunk.split(" ") if item] for chunk in tmp]
+
+            casters = {"int": int, "real": float, "char": str}
+            for line in tmp[1:]:
+                if len(line) > 4:
+                    self[line[3]] = np.array(list(map(casters[line[1]], line[4:])))
+                else:
+                    self[line[3]] = None
+            return
+
+        if name not in {"b2fstate", "b2fstati"}:
+            raise ValueError(f"Unsupported SOLPS file type: {name}")
+
+        with open(self.filename, "r", encoding="utf-8", errors="ignore") as stream:
+            lines = stream.readlines()
+
+        self["__notes__"] = []
+        self["__unhandled__"] = []
+        self["nx"], self["ny"], self["ns"] = 0, 0, 0
+
+        translations = {"real": float, "int": int, "char": str}
+        cflines = [idx for idx, line in enumerate(lines) if line.startswith("*cf:")]
+        cflines.append(len(lines))
+
+        if cflines and cflines[0] > 0:
+            self["__notes__"] = [line.rstrip("\n") for line in lines[: cflines[0]]]
+
+        for idx in range(len(cflines) - 1):
+            tokens = lines[cflines[idx]].split()
+            dat_type_name = tokens[1].strip()
+            dat_type = translations["float" if dat_type_name == "real" else dat_type_name]
+            n = int(tokens[2])
+            names = tokens[3].split(",")
+            raw = lines[cflines[idx] + 1 : cflines[idx + 1]]
+
+            if dat_type is not str:
+                data = np.array(" ".join(raw).split()).astype(dat_type)
+            else:
+                data = lines[cflines[idx] + 1].rstrip("\n")[1:]
+
+            if len(names) == 1:
+                key = names[0]
+                if n == (self["nx"] + 2) * (self["ny"] + 2):
+                    self[key] = data.reshape(-1, self["nx"] + 2)
+                elif n == self["nx"] * self["ny"]:
+                    self[key] = data.reshape(-1, self["nx"])
+                elif n == (self["nx"] + 2) * (self["ny"] + 2) * self["ns"]:
+                    self[key] = data.reshape(self["ns"], -1, self["nx"] + 2)
+                elif n == self["nx"] * self["ny"] * self["ns"]:
+                    self[key] = data.reshape(self["ns"], -1, self["nx"])
+                elif n == (self["nx"] + 2) * (self["ny"] + 2) * 2:
+                    self[key] = data.reshape(2, -1, self["nx"] + 2)
+                elif n == self["nx"] * self["ny"] * 2:
+                    self[key] = data.reshape(2, -1, self["nx"])
+                elif n == (self["nx"] + 2) * (self["ny"] + 2) * self["ns"] * 2:
+                    self[key] = data.reshape(self["ns"], 2, -1, self["nx"] + 2)
+                elif n == self["nx"] * self["ny"] * self["ns"] * 2:
+                    self[key] = data.reshape(self["ns"], 2, -1, self["nx"])
+                else:
+                    self[key] = data
+            elif len(names) == n:
+                for key, value in zip(names, data):
+                    self[key] = value
+            else:
+                self["__unhandled__"].append({"names": names, "data": data})
 
 
 class solps_case:
@@ -66,7 +150,7 @@ class solps_case:
     geqdsk : str, optional (option #1 and #2)
         Path to the geqdsk to load from disk.
         Users may also directly provide an instance of the
-        `omfit_classes.omfit_geqdsk.OMFITgeqdsk` class that contains the processed gEQDSK file.
+        `aurora.eqdsk.GEQDSK` class that contains the processed gEQDSK file.
         If not provided, the code tries to reconstruct a geqdsk based on the experiment name and
         time of analysis stored in the SOLPS output. If set to None, no geqdsk is loaded and
         functionality related to the geqdsk is not used.
@@ -113,10 +197,8 @@ class solps_case:
                 )
 
         if self.form == "files":
-            from omfit_classes import omfit_solps
-
-            self.b2fstate = omfit_solps.OMFITsolps(self.b2fstate_path)
-            self.b2fgmtry = omfit_solps.OMFITsolps(self.b2fgmtry_path)
+            self.b2fstate = SOLPSFile(self.b2fstate_path)
+            self.b2fgmtry = SOLPSFile(self.b2fgmtry_path)
 
             self.nx, self.ny = self.b2fgmtry["nx,ny"]
 
@@ -206,30 +288,30 @@ class solps_case:
                 # user explicitly requested not to use geqdsk functionality
                 self.geqdsk = None
             else:
-                from omfit_classes import omfit_eqdsk
+                from . import eqdsk
 
                 if isinstance(kwargs["geqdsk"], str):
                     # load geqdsk file
-                    self.geqdsk = omfit_eqdsk.OMFITgeqdsk(kwargs["geqdsk"])
+                    self.geqdsk = eqdsk.GEQDSK(kwargs["geqdsk"])
                 else:
-                    # assume geqdsk was already loaded via OMFITgeqdsk
+                    # assume geqdsk was already loaded
                     self.geqdsk = kwargs["geqdsk"]
         else:
-            from omfit_classes import omfit_eqdsk
+            from . import eqdsk
 
             # try to find gEQDSK and load it
             _gfile_path = None if self.form == "mdsplus" else self.find_gfile()
             if _gfile_path is not None:
-                self.geqdsk = omfit_eqdsk.OMFITgeqdsk(_gfile_path)
+                self.geqdsk = eqdsk.GEQDSK(_gfile_path)
             else:
                 # attempt to reconstruct geqdsk from device MDS+ server
                 try:
                     if "AUG" in self.data("exp")[0]:
-                        self.geqdsk = omfit_eqdsk.OMFITgeqdsk("").from_aug_sfutils(
+                        self.geqdsk = eqdsk.GEQDSK("").from_aug_sfutils(
                             int(self.data("shot")), float(self.data("time")), "EQI"
                         )
                     else:
-                        self.geqdsk = omfit_eqdsk.OMFITgeqdsk("").from_mdsplus(
+                        self.geqdsk = eqdsk.GEQDSK("").from_mdsplus(
                             device=self.data("exp"),
                             shot=int(self.data("shot")),
                             time=float(self.data("time")) * 1e3,
@@ -241,7 +323,7 @@ class solps_case:
         # if user provided path to b2fplasmf file, load that too
         if "b2fplasmf_path" in kwargs:
             self.b2fplasmf_path = str(kwargs["b2fplasmf_path"])
-            self.b2fplasmf = omfit_solps.OMFITsolps(self.b2fstate_path)
+            self.b2fplasmf = SOLPSFile(self.b2fstate_path)
 
     def data(self, varname):
         """Fetch data either from files or MDS+ tree.
@@ -255,13 +337,13 @@ class solps_case:
             return getattr(self, varname)
         elif self.form == "mdsplus":
             # try fetching from MDS+
-            from omfit_classes import omfit_mds
+            from . import mds
 
             # cache quantities fetched from MDS+ to increase speed
             setattr(
                 self,
                 varname,
-                omfit_mds.OMFITmdsValue(
+                mds.MDSValue(
                     self.server, self.tree, self.solps_id, TDI=self.mdsmap[varname]
                 ).data(),
             )
@@ -383,7 +465,7 @@ class solps_case:
         b2_za = self.b2fstate["zamin"] if self.form == "files" else self.data("za")
 
         # import here to avoid issues when building docs or package
-        from omfit_classes.utils_math import atomic_element, toRoman
+        from .elements import atomic_element, toRoman
 
         self.b2_species = {}
         for ii, (Zi, An) in enumerate(zip(b2_za, b2_am)):
@@ -1337,7 +1419,7 @@ def apply_mask(triang, geqdsk, max_mask_len=0.4, mask_up=False, mask_down=False)
     triang : instance of matplotlib.tri.triangulation.Triangulation
         Matplotlib triangulation object for the (R,Z) grid.
     geqdsk : dict
-        Dictionary containing gEQDSK file values as processed by `omfit_classes.omfit_eqdsk`.
+        Dictionary containing gEQDSK file values as processed by `aurora.eqdsk`.
     max_mask_len : float
         Maximum length [m] of segments within the triangulation. Segments longer
         than this value will not be plotted. This helps avoiding triangulation

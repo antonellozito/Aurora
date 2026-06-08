@@ -3,6 +3,7 @@ Part of this script is adapted and extended based on original work by S.Zamperin
 EIRENE-related functionality was implemented with extensive support by S. Lisgo.
 """
 import sys, re, os
+import ast
 import copy
 import numpy as np
 import matplotlib as mpl
@@ -266,7 +267,7 @@ class oedge_input(dict):
         data_width = 10
 
         # import here to avoid issues during regression tests
-        from omfit_classes.utils_base import tolist
+        from .elements import tolist
 
         # create output list
         out = []
@@ -585,11 +586,10 @@ class oedge_output:
         if output_nc_file is not None:
             self.output_nc_file = str(output_nc_file)
 
-        # import omfit_classes here to prevent import during regression tests
-        from omfit_classes.omfit_nc import OMFITnc
+        from .nc import NCFile
 
         # Load in the output netCDF file
-        self.nc = OMFITnc(self.output_nc_file)
+        self.nc = NCFile(self.output_nc_file)
 
         # Load in some netCDF data that is used a lot.
         self.rs = self.nc["RS"]["data"]  # R coordinante of cell centers
@@ -2351,10 +2351,10 @@ class oedge_output:
             ).transpose(1, 0, 2)
         else:
             # find impurity species atomic symbol
-            from omfit_classes import utils_math
+            from . import elements as element_tools
 
-            key = list(utils_math.atomic_element(Z=self.cion).keys())[0]
-            imp = utils_math.atomic_element(Z=self.cion)[key]["symbol"]
+            key = list(element_tools.atomic_element(Z=self.cion).keys())[0]
+            imp = element_tools.atomic_element(Z=self.cion)[key]["symbol"]
             nz = self.nc["DDLIMS"]["data"][1:].transpose(
                 1, 0, 2
             )  # first index to be ignored
@@ -2627,10 +2627,72 @@ class oedge_output:
         plt.tight_layout()
 
 
-def interpret(x, item=None):
+def _parse_namelist_token(orig, escaped_strings=True):
+    def eval_(value):
+        try:
+            return int(value)
+        except Exception:
+            try:
+                return float(value)
+            except Exception:
+                return ast.literal_eval(value)
 
-    # import here to avoid issues during regression tests
-    from omfit_classes.omfit_namelist import namelist
+    out = orig if isinstance(orig, str) else repr(orig)
+
+    try:
+        if escaped_strings:
+            orig_ = re.sub(r"\\([!&$])", r"\1", out)
+            if escaped_strings == "fortran":
+                orig_ = re.sub(r"\\", r"\\\\", orig_)
+        else:
+            orig_ = out
+        out = eval_(orig_)
+        if isinstance(out, tuple):
+            return complex(out[0], out[1])
+    except Exception:
+        try:
+            if out == "nan":
+                out = np.nan
+            elif out == "inf":
+                out = np.inf
+            elif re.match(r"\- ?inf", out):
+                out = -np.inf
+            else:
+                raise ValueError
+        except Exception:
+            try:
+                tmp = re.sub(
+                    r"([0-9]+|[0-9]*(?:[0-9]\.|\.[0-9])[0-9]*)[dD]([\-\+]*[0-9]+)",
+                    r"\1e\2",
+                    out,
+                )
+                tmp = re.sub(r"\+", "", tmp)
+                out = eval_(tmp)
+            except Exception:
+                try:
+                    match = re.match(r"([0-9]+)\*(.+)", tmp)
+                    if match:
+                        out = [eval_(match.group(2))] * int(match.group(1))
+                    else:
+                        raise ValueError
+                except Exception:
+                    try:
+                        tmp = re.sub(r"(?i)^\.true\.", "1", out)
+                        tmp = re.sub(r"(?i)^\.false\.", "0", tmp)
+                        tmp = re.sub(r"(?i)^true", "1", tmp)
+                        tmp = re.sub(r"(?i)^false", "0", tmp)
+                        tmp = re.sub(r"(?i)^\.t", "1", tmp)
+                        tmp = re.sub(r"(?i)^\.f", "0", tmp)
+                        tmp = re.sub(r"(?i)^t", "1", tmp)
+                        tmp = re.sub(r"(?i)^f", "0", tmp)
+                        out = bool(eval_(tmp))
+                    except Exception:
+                        pass
+
+    return out
+
+
+def interpret(x, item=None):
 
     # condition to deal with some EIRENE settings
     if item is not None and ("{" in item and "}" in item):
@@ -2671,7 +2733,7 @@ def interpret(x, item=None):
         else:
             xx.extend(
                 list(
-                    map(namelist.interpreter, [_f for _f in re.split(" |\t", k) if _f])
+                    map(_parse_namelist_token, [_f for _f in re.split(" |\t", k) if _f])
                 )
             )
 

@@ -337,8 +337,8 @@ def radiation_model(
     Te_eV : array (nr,)
         Electron temperature in eV
     geqdsk : dict, optional
-        EFIT gfile as returned after postprocessing by the :py:mod:`omfit_classes.omfit_eqdsk`
-        package (OMFITgeqdsk class).
+        EFIT gfile as returned after postprocessing by :py:mod:`aurora.eqdsk`
+        (`GEQDSK` class).
     adas_files_sub : dict
         Dictionary containing ADAS file names for forward modeling and/or radiation calculations.
         Possibly useful keys include
@@ -1255,7 +1255,7 @@ def get_local_spectrum(
         raise ValueError("Unrecognized adf15_file format!")
 
     # import here to avoid issues when building docs or package
-    from omfit_classes.utils_math import atomic_element
+    from .elements import atomic_element
 
     # get nuclear charge Z and atomic mass number A
     out = atomic_element(symbol=trs.attrs["element"])
